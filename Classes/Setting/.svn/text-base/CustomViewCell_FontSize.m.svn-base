@@ -1,0 +1,147 @@
+//
+//  CustomViewCell_FontSize.m
+//  mobilebook
+//
+//  Created by Liu Xionghui on 10-1-13.
+//  Copyright 2010 SmilingMobile Inc. All rights reserved.
+//
+
+#import "CustomViewCell_FontSize.h"
+#import "Setting_Define.h"
+
+@implementation CustomViewCell_FontSize
+@synthesize bigButton;
+@synthesize midButton;
+@synthesize smlButton;
+
+-(void)initimg
+{
+	bigButtonImg_on  = [UIImage imageNamed:@"Big_1.png"];
+	bigButtonImg_off = [UIImage imageNamed:@"Big_2.png"];
+	midButtonImg_on  = [UIImage imageNamed:@"Middle_1.png"];
+	midButtonImg_off = [UIImage imageNamed:@"Middle_2.png"];
+	smlButtonImg_on  = [UIImage imageNamed:@"Small_1.png"];
+	smlButtonImg_off = [UIImage imageNamed:@"Small_2.png"];
+	currentstatus = 1;
+}
+
+-(void)getStatus: (NSUInteger *)status
+{
+	*status = currentstatus;
+}
+
+-(void)setStatus:(NSUInteger)status
+{
+	currentstatus = status;
+	switch (currentstatus)
+	{
+		case 0:
+			[bigButton setImage:bigButtonImg_off forState: UIControlStateNormal];
+			[bigButton setImage:bigButtonImg_off forState: UIControlStateHighlighted];
+			[bigButton setImage:bigButtonImg_off forState: UIControlStateDisabled];
+			[bigButton setImage:bigButtonImg_off forState: UIControlStateSelected];
+			[bigButton setImage:bigButtonImg_off forState: UIControlStateApplication];
+			[bigButton setImage:bigButtonImg_off forState: UIControlStateReserved];
+			
+			[midButton setImage:midButtonImg_off forState: UIControlStateNormal];
+			[midButton setImage:midButtonImg_off forState: UIControlStateHighlighted];
+			[midButton setImage:midButtonImg_off forState: UIControlStateDisabled];
+			[midButton setImage:midButtonImg_off forState: UIControlStateSelected];
+			[midButton setImage:midButtonImg_off forState: UIControlStateApplication];
+			[midButton setImage:midButtonImg_off forState: UIControlStateReserved];
+			
+			[smlButton setImage:smlButtonImg_on forState: UIControlStateNormal];
+			[smlButton setImage:smlButtonImg_on forState: UIControlStateHighlighted];
+			[smlButton setImage:smlButtonImg_on forState: UIControlStateDisabled];
+			[smlButton setImage:smlButtonImg_on forState: UIControlStateSelected];
+			[smlButton setImage:smlButtonImg_on forState: UIControlStateApplication];
+			[smlButton setImage:smlButtonImg_on forState: UIControlStateReserved];
+			break;
+		case 1:
+			[bigButton setImage:bigButtonImg_off forState: UIControlStateNormal];
+			[bigButton setImage:bigButtonImg_off forState: UIControlStateHighlighted];
+			[bigButton setImage:bigButtonImg_off forState: UIControlStateDisabled];
+			[bigButton setImage:bigButtonImg_off forState: UIControlStateSelected];
+			[bigButton setImage:bigButtonImg_off forState: UIControlStateApplication];
+			[bigButton setImage:bigButtonImg_off forState: UIControlStateReserved];
+			
+			[midButton setImage:midButtonImg_on forState: UIControlStateNormal];
+			[midButton setImage:midButtonImg_on forState: UIControlStateHighlighted];
+			[midButton setImage:midButtonImg_on forState: UIControlStateDisabled];
+			[midButton setImage:midButtonImg_on forState: UIControlStateSelected];
+			[midButton setImage:midButtonImg_on forState: UIControlStateApplication];
+			[midButton setImage:midButtonImg_on forState: UIControlStateReserved];
+			
+			[smlButton setImage:smlButtonImg_off forState: UIControlStateNormal];
+			[smlButton setImage:smlButtonImg_off forState: UIControlStateHighlighted];
+			[smlButton setImage:smlButtonImg_off forState: UIControlStateDisabled];
+			[smlButton setImage:smlButtonImg_off forState: UIControlStateSelected];
+			[smlButton setImage:smlButtonImg_off forState: UIControlStateApplication];
+			[smlButton setImage:smlButtonImg_off forState: UIControlStateReserved];
+			break;
+		case 2:
+			[bigButton setImage:bigButtonImg_on forState: UIControlStateNormal];
+			[bigButton setImage:bigButtonImg_on forState: UIControlStateHighlighted];
+			[bigButton setImage:bigButtonImg_on forState: UIControlStateDisabled];
+			[bigButton setImage:bigButtonImg_on forState: UIControlStateSelected];
+			[bigButton setImage:bigButtonImg_on forState: UIControlStateApplication];
+			[bigButton setImage:bigButtonImg_on forState: UIControlStateReserved];
+			
+			[midButton setImage:midButtonImg_off forState: UIControlStateNormal];
+			[midButton setImage:midButtonImg_off forState: UIControlStateHighlighted];
+			[midButton setImage:midButtonImg_off forState: UIControlStateDisabled];
+			[midButton setImage:midButtonImg_off forState: UIControlStateSelected];
+			[midButton setImage:midButtonImg_off forState: UIControlStateApplication];
+			[midButton setImage:midButtonImg_off forState: UIControlStateReserved];
+			
+			[smlButton setImage:smlButtonImg_off forState: UIControlStateNormal];
+			[smlButton setImage:smlButtonImg_off forState: UIControlStateHighlighted];
+			[smlButton setImage:smlButtonImg_off forState: UIControlStateDisabled];
+			[smlButton setImage:smlButtonImg_off forState: UIControlStateSelected];
+			[smlButton setImage:smlButtonImg_off forState: UIControlStateApplication];
+			[smlButton setImage:smlButtonImg_off forState: UIControlStateReserved];
+			break;
+		default:
+			break;
+	}
+}
+
+-(IBAction)buttonPressed:(id)sender
+{
+	UIButton * pressedbutton = (UIButton *) sender;
+	currentstatus = pressedbutton.tag;
+	[self setStatus:currentstatus];
+	[[NSNotificationCenter defaultCenter] postNotificationName:Notification_FontSize object:nil];
+}
+
+- (id)initWithStyle:(UITableViewCellStyle)style reuseIdentifier:(NSString *)reuseIdentifier {
+    if (self = [super initWithStyle:style reuseIdentifier:reuseIdentifier]) {
+        // Initialization code
+    }
+    return self;
+}
+
+
+- (void)setSelected:(BOOL)selected animated:(BOOL)animated {
+
+    [super setSelected:selected animated:animated];
+
+    // Configure the view for the selected state
+}
+
+
+- (void)dealloc {
+	[bigButton release];
+	[midButton release];
+	[smlButton release];
+	//[bigButtonImg_on release];
+//	[bigButtonImg_off release];
+//	[midButtonImg_on release];
+//	[midButtonImg_off release];
+//	[smlButtonImg_on release];
+//	[smlButtonImg_off release];
+    [super dealloc];
+}
+
+
+@end

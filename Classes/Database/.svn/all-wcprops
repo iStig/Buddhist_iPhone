@@ -1,0 +1,83 @@
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svn/Projects/!svn/ver/1815/trunk/cbetabook/Classes/Database
+END
+CatalogElement.m
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/Projects/!svn/ver/758/trunk/cbetabook/Classes/Database/CatalogElement.m
+END
+SubVolumnElement.m
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/Projects/!svn/ver/319/trunk/cbetabook/Classes/Database/SubVolumnElement.m
+END
+Catalog.h
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/Projects/!svn/ver/758/trunk/cbetabook/Classes/Database/Catalog.h
+END
+Define.h
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/Projects/!svn/ver/319/trunk/cbetabook/Classes/Database/Define.h
+END
+SettingData.plist
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/Projects/!svn/ver/1815/trunk/cbetabook/Classes/Database/SettingData.plist
+END
+SettingData.m
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/Projects/!svn/ver/1814/trunk/cbetabook/Classes/Database/SettingData.m
+END
+Catalog.plist
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/Projects/!svn/ver/750/trunk/cbetabook/Classes/Database/Catalog.plist
+END
+Catalog.m
+K 25
+svn:wc:ra_dav:version-url
+V 69
+/svn/Projects/!svn/ver/758/trunk/cbetabook/Classes/Database/Catalog.m
+END
+LectionCatalogElement.h
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/Projects/!svn/ver/758/trunk/cbetabook/Classes/Database/LectionCatalogElement.h
+END
+CatalogElement.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/Projects/!svn/ver/319/trunk/cbetabook/Classes/Database/CatalogElement.h
+END
+SubVolumnElement.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/Projects/!svn/ver/319/trunk/cbetabook/Classes/Database/SubVolumnElement.h
+END
+LectionCatalogElement.m
+K 25
+svn:wc:ra_dav:version-url
+V 83
+/svn/Projects/!svn/ver/758/trunk/cbetabook/Classes/Database/LectionCatalogElement.m
+END
+SettingData.h
+K 25
+svn:wc:ra_dav:version-url
+V 73
+/svn/Projects/!svn/ver/759/trunk/cbetabook/Classes/Database/SettingData.h
+END

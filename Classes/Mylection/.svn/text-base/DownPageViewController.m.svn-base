@@ -1,0 +1,571 @@
+    //
+//  PageViewController.m
+//  cbeta
+//
+//  Created by SmilingMobile on 10-6-17.
+//  Copyright 2010 SmilingMobile. All rights reserved.
+//
+
+#import "DownPageViewController.h"
+#import "SettingData.h"
+#import "ReadView.h"
+#import "cbetaAppDelegate.h"
+#import "SoundEffect.h"
+
+
+@implementation DownPageViewController
+
+@synthesize m_isInsert;
+@synthesize m_currentContent;
+
+@synthesize m_volumnNo;
+@synthesize m_lectionNo;
+@synthesize m_subvolumnNo;
+@synthesize m_lectionName;
+
+@synthesize chapterNumber;
+@synthesize m_readView;
+@synthesize updateTimer;
+@synthesize currentPage;
+@synthesize totalPageNumber;
+@synthesize fontHeight;
+@synthesize linesPerPage;
+@synthesize autoScrolling;
+
+
+@synthesize pagingOn; 
+@synthesize pagingAnimationOn;
+@synthesize pagingSoundOn;
+@synthesize autoScrollingOn;
+@synthesize autoScrollingSpeed;
+
+@synthesize pageSound;
+@synthesize m_xmlParser;
+@synthesize m_loadingIndicator;
+
+#define kPageHeight 367.0
+#define kPageWidth 320.0
+#define kPageAnimationDuration 0.75
+
+- (void)dealloc {
+	
+	[m_currentContent release];
+	[m_volumnNo release];
+	[m_lectionNo release];
+	[m_subvolumnNo release];
+	[m_lectionName release];
+	[m_readView release];
+    [pageSound release];
+	[m_xmlParser release];
+	[m_loadingIndicator release];
+	
+	[super dealloc];
+	
+}
+
+- (void)viewWillAppear:(BOOL)animated{
+	
+	
+}
+- (void)viewDidAppear:(BOOL)animated{
+	//NSThread *thread = [[NSThread alloc]initWithTarget:self selector:@selector(startActivity) object:nil];
+	//	self.m_thread = thread;
+	//	[thread release];
+	//	[m_thread start];
+	
+	if(self.m_currentContent==nil){
+	//xml解析
+	NSString *paths;
+	if (([self.m_volumnNo isEqualToString:@"T08"]&&[m_lectionNo isEqualToString:@"235"])
+		||([self.m_volumnNo isEqualToString:@"T08"]&&[m_lectionNo isEqualToString:@"251"])
+		||([self.m_volumnNo isEqualToString:@"T09"]&&[m_lectionNo isEqualToString:@"262"])
+		) {
+		paths = [[NSBundle mainBundle]resourcePath];
+		
+	}else {
+		
+		NSArray *documentPath =NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask , YES);
+		NSString *documentPath1 = ([documentPath count]>0) ? [documentPath objectAtIndex:0]:nil;
+		NSString *documentPath2 =[documentPath1 stringByAppendingString:@"/"];
+		NSString *documentPath3 = [documentPath2 stringByAppendingString:self.m_volumnNo]; //增加子文件夹,解压后的T01.
+        paths =[documentPath3 stringByAppendingString:@"/"];
+		
+	}
+	
+	NSString *xmlFile = [paths stringByAppendingPathComponent:[self makeXml]];
+	NSFileManager *fileManager = [NSFileManager defaultManager];
+	if ([fileManager fileExistsAtPath:xmlFile]) {
+		NSURL    *xmlURL = [NSURL fileURLWithPath:xmlFile isDirectory:NO];
+		NSXMLParser *firstParser = [[NSXMLParser alloc] initWithContentsOfURL:xmlURL];
+		self.m_xmlParser = firstParser;
+		[firstParser release];
+		[m_xmlParser setDelegate:self];
+		[m_xmlParser parse];
+		if (self.m_currentContent ==nil) {
+			UIAlertView *alter = [[UIAlertView alloc] initWithTitle:@"提示信息"
+															message:@"本文件已经被损坏,暂时不能阅读"
+														   delegate:nil
+												  cancelButtonTitle:@"ok"
+												  otherButtonTitles:nil];
+			[alter show];
+			[alter release];
+			
+		}else {
+			m_readView.m_textView.text = self.m_currentContent;
+		}
+		
+	}else {
+		UIAlertView *alter = [[UIAlertView alloc] initWithTitle:@"提示信息"
+														message:@"本站暂时缺失该文件下载"
+													   delegate:nil
+											  cancelButtonTitle:@"ok"
+											  otherButtonTitles:nil];
+		[alter show];
+		[alter release];
+	}
+  }	
+
+	//获得当前页码
+	SettingData *settingData = [SettingData sharedSettingData];
+	currentPage =[settingData getCurrentPage:self.m_volumnNo 
+								 withLection:self.m_lectionNo 
+								   withSubVo:self.m_subvolumnNo] ;
+	//默认初始化为1
+	[self gotoPage: currentPage];
+	
+	autoScrolling = NO;
+	[self stopRepeatingTimer];
+	[self configBySettingData];
+	[self addObservers];
+	
+	
+	[self.m_readView getSettingData];
+	[self configBySettingData];
+	[self computePageAndLines];
+	if(currentPage>totalPageNumber)
+		currentPage = totalPageNumber;
+	[self gotoPageNoSound: currentPage];
+	[m_loadingIndicator stopAnimating];
+	[m_loadingIndicator.view removeFromSuperview];
+
+}
+
+// Implement viewDidLoad to do additional setup after loading the view, typically from a nib.
+- (void)viewDidLoad {
+	
+	//添加收藏按钮
+	UIBarButtonItem* addItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemBookmarks
+																			 target:self action:@selector(saveAction)];
+	self.navigationItem.rightBarButtonItem = addItem;
+	[addItem release];
+	
+	//显示的标题
+	NSMutableString *sublecName =[NSMutableString stringWithString:self.m_subvolumnNo];
+	[sublecName appendString:self.m_lectionName];
+	self.title = sublecName;
+	
+	//初始化声音
+	NSBundle *mainBundle = [NSBundle mainBundle];
+	pageSound = [[SoundEffect alloc] initWithContentsOfFile:[mainBundle pathForResource:@"flipNext" ofType:@"wav"]];
+	
+	self.m_readView = [[ReadView alloc] initWithFrame: CGRectMake(0,0,320, 367)];
+	m_loadingIndicator = [[LoadingIndicatorView alloc] initWithNibName:@"LoadingIndicatorView" bundle:nil];
+	CGRect frame = CGRectMake(110.0, 172.0, 80, 60);
+	m_loadingIndicator.view.frame = frame;
+	[self.m_readView addSubview:m_loadingIndicator.view];
+	m_loadingIndicator.view.hidden = NO;
+	[m_loadingIndicator startAnimating];
+	[self.view addSubview:m_readView];
+	NSLog(@"%@",self.m_subvolumnNo);
+
+	[super viewDidLoad];
+}
+
+-(void)saveAction 
+{
+	SettingData *setData;
+	setData = [SettingData sharedSettingData];
+	[setData  addBookMarks: m_volumnNo withLection:m_lectionNo withSubVo
+						  :m_subvolumnNo withlectionName:m_lectionName];
+	UIAlertView *alert = [[UIAlertView alloc] initWithTitle:nil message:@"添加书签"
+												   delegate:self cancelButtonTitle:@"确定" otherButtonTitles:nil];
+	[alert show];
+	[alert release];
+}
+
+
+#pragma mark  PageView Controller 
+
+- (void) prevPage{
+	
+	if(currentPage > 1){
+		if(pagingAnimationOn){
+			[UIView beginAnimations:nil context:NULL];
+			[UIView setAnimationDuration:kPageAnimationDuration];
+			
+			[UIView setAnimationTransition: UIViewAnimationTransitionCurlDown forView: m_readView cache:NO];//UIViewAnimationTransitionFlipFromLeft
+			
+			[UIView commitAnimations];
+			
+		}
+		
+		[self gotoPage: (currentPage - 1)];
+	}
+	else if (currentPage == 1){
+		
+		UIAlertView *alter = [[UIAlertView alloc] initWithTitle:@"提示信息"
+														message:@"该页是首页"
+													   delegate:nil
+											  cancelButtonTitle:@"ok"
+											  otherButtonTitles:nil];
+		[alter show];
+		[alter release];
+		
+	}
+	
+}
+
+
+- (void) nextPage{
+	
+	if(currentPage < totalPageNumber){
+		if(pagingAnimationOn) {
+			[UIView beginAnimations:nil context:NULL];
+			[UIView setAnimationDuration:kPageAnimationDuration];
+			
+			[UIView setAnimationTransition: UIViewAnimationTransitionCurlUp forView: m_readView cache:NO];//UIViewAnimationTransitionFlipFromLeft
+			[UIView commitAnimations];
+			
+		}
+		[self gotoPage: (currentPage + 1)];
+	}
+	else if (currentPage == totalPageNumber)
+	{
+		UIAlertView *alter = [[UIAlertView alloc] initWithTitle:@"提示信息"
+														message:@"该页是最后一页"
+													   delegate:nil
+											  cancelButtonTitle:@"ok"
+											  otherButtonTitles:nil];
+		[alter show];
+		[alter release];
+
+	}
+}
+
+- (void) autoScroll{
+	if(autoScrollingOn){
+		if(autoScrolling == NO){
+			[self startRepeatingTimer: autoScrollingSpeed];
+			autoScrolling = YES;
+		}
+		else {
+			[self stopRepeatingTimer];
+			autoScrolling = NO;
+		}
+	}
+	
+}
+
+- (void)startRepeatingTimer:(NSUInteger)timeIntervalSec {
+	NSTimer *timer;
+	
+	if (0 != timeIntervalSec) {
+		
+		timer = [NSTimer scheduledTimerWithTimeInterval:timeIntervalSec
+												 target:self selector:@selector(moveupHalfPixelUp:)
+											   userInfo:nil repeats:YES];
+		self.updateTimer = timer;
+	}
+	else{
+		if(self.updateTimer)
+		{
+			[self stopRepeatingTimer];
+		}
+		
+	}
+	
+}
+
+- (void)stopRepeatingTimer {
+	
+	if(self.updateTimer){
+		[updateTimer invalidate];
+		self.updateTimer = nil;
+	}
+}
+
+//移动步伐
+- (void) moveupHalfPixelUp:(NSTimer *)timer {
+	
+	CGPoint currentPoint = m_readView.m_textView.contentOffset;
+	
+	
+	CGFloat newHeight = currentPoint.y  + 0.5;
+	CGRect rect = CGRectMake(0, newHeight, kPageWidth, kPageHeight);
+	
+	[m_readView.m_textView scrollRectToVisible:rect animated:YES];
+	
+}
+
+-(void) gotoPage: (NSUInteger) pageNumber{
+	CGPoint contentOffset;
+	if(pageNumber == 1)
+	{
+		contentOffset = CGPointMake (0, 0);
+	}
+	else if (pageNumber == totalPageNumber +1){
+		
+	}
+	else if (pageNumber == 0) {
+
+	}
+	else {
+		contentOffset = CGPointMake (0, ((pageNumber-1)*linesPerPage -1)*fontHeight +8);
+	}
+	
+	[m_readView.m_textView setContentOffset:contentOffset animated:NO];
+	currentPage = pageNumber;
+	
+	if(pagingSoundOn&&pagingAnimationOn) [pageSound play];
+	
+}
+
+-(void) gotoPageNoSound: (NSUInteger) pageNumber{
+	CGPoint contentOffset;
+	if(pageNumber == 1)
+	{
+		contentOffset = CGPointMake (0, 0);
+	}
+	else if (pageNumber == totalPageNumber +1){
+
+	}
+	else if (pageNumber == 0) {
+		// go to last Chapter last page
+	}
+	else {
+		contentOffset = CGPointMake (0, ((pageNumber-1)*linesPerPage -1)*fontHeight +8);
+	}
+	
+	[m_readView.m_textView setContentOffset:contentOffset animated:NO];
+	currentPage = pageNumber;
+}
+
+- (void) addObservers{
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(autoScroll) name: Notification_SingleTap_Center object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(nextPage)	name:Notification_SingleTap_Right object:nil];
+	[[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(prevPage)	name:Notification_SingleTap_Left object:nil];
+}
+
+- (void) removeObservers{
+	[[NSNotificationCenter defaultCenter] removeObserver:self
+													name:Notification_SingleTap_Center
+												  object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self
+													name:Notification_SingleTap_Right
+												  object:nil];
+	[[NSNotificationCenter defaultCenter] removeObserver:self
+													name:Notification_SingleTap_Left
+												  object:nil];
+}
+
+
+//保存上次查看的页码
+- (void)viewDidDisappear:(BOOL)animated{
+	
+	[self removeObservers];
+	SettingData *settingData = [SettingData sharedSettingData];
+	[settingData updateCurrentPage:self.m_volumnNo 
+					   withLection:self.m_lectionNo 
+					   withSubVo:self.m_subvolumnNo 
+				   withCurrentPage:self.currentPage];
+}
+- (void) configBySettingData{
+	SettingData *settingData = [SettingData sharedSettingData];
+	//pagingon
+	pagingOn = !settingData.manualPagingOn;
+	[m_readView setPaging: pagingOn];
+	pagingAnimationOn = settingData.pagingAnimationOn;
+	autoScrollingOn = settingData.autoScrollOn;
+	autoScrollingSpeed = settingData.autoScrollSpeed;
+	pagingSoundOn = settingData.pagingSoundOn;
+	
+}
+
+//分页方法
+- (void) computePageAndLines{
+	NSString *testStr = @"test String";
+	
+	CGSize fontSize = [testStr sizeWithFont: m_readView.m_textView.font];
+	fontHeight = fontSize.height;
+
+	CGSize chapterSize = [m_currentContent sizeWithFont: m_readView.m_textView.font 
+										   constrainedToSize: CGSizeMake (304, 76000) lineBreakMode: UILineBreakModeWordWrap];
+	linesPerPage = kPageHeight/fontHeight;
+	NSUInteger totalLineNumber = chapterSize.height/fontHeight;
+
+	if( (totalLineNumber + 1)%linesPerPage == 0){
+		totalPageNumber = (totalLineNumber +1)/linesPerPage;
+	}
+	else {
+		totalPageNumber = (totalLineNumber+1)/linesPerPage +1;
+	}
+}
+
+#pragma mark  xml parser 
+
+- (void)parser:(NSXMLParser *)parser didStartElement:(NSString *)elementName 
+  namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qualifiedName 
+	attributes:(NSDictionary *)attributeDict
+{
+	
+	//if (([elementName compare:@"juan"] == NSOrderedSame) 
+//		&& ([[attributeDict objectForKey:@"fun"] isEqualToString:@"open"])
+//		&&([[attributeDict objectForKey:@"n"] isEqualToString:[self addZeroToSubVoluNo:self.m_subvolumnNo]]
+//		||[[attributeDict objectForKey:@"n"] isEqualToString:self.m_subvolumnNo]))
+//	{
+//		NSMutableString   *currentContent = [[NSMutableString alloc] initWithCapacity:0];
+//		self.m_currentContent = currentContent;
+//		[currentContent release];
+//		self.m_isInsert = YES;
+//		
+//	}
+//	else if (([elementName compare:@"juan"] == NSOrderedSame) 
+//			 && ([[attributeDict objectForKey:@"fun"] isEqualToString:@"close"])
+//			 && ([[attributeDict objectForKey:@"n"] isEqualToString:[self addZeroToSubVoluNo:self.m_subvolumnNo]]
+//			 ||[[attributeDict objectForKey:@"n"] isEqualToString:self.m_subvolumnNo]))
+//	{
+//		[parser abortParsing];
+//	}
+	if (([elementName compare:@"milestone"] == NSOrderedSame)
+		&&([[attributeDict objectForKey:@"n"] intValue] == [self.m_subvolumnNo intValue])) {
+		
+		NSMutableString   *currentContent = [[NSMutableString alloc] initWithCapacity:0];
+				self.m_currentContent = currentContent;
+				[currentContent release];
+				self.m_isInsert = YES;
+			
+	}else if (([elementName compare:@"milestone"] == NSOrderedSame)
+				&&([[attributeDict objectForKey:@"n"] intValue] >[self.m_subvolumnNo intValue])) {
+		
+		     [parser abortParsing];
+     }
+	else if(([elementName compare:@"foreign"] == NSOrderedSame))
+	{
+		self.m_isInsert = NO;
+	}
+	//else if(([elementName compare:@"p"] == NSOrderedSame))
+//	{
+//		[self.m_currentContent appendString:@"\n"];
+//	}
+//	else if(([elementName compare:@"lb"] == NSOrderedSame))
+//	{
+//		[self.m_currentContent appendString:@"\n"];
+//	}
+//	else if(([elementName compare:@"l"] == NSOrderedSame))
+//	{
+//			[self.m_currentContent appendString:@"     "];
+//		
+//	}
+	
+}
+
+- (void)parser:(NSXMLParser *)parser foundCharacters:(NSString *)string {
+   
+	if (self.m_isInsert) {
+			[self.m_currentContent appendString:string];
+    }
+}
+
+- (void)parser:(NSXMLParser *)parser didEndElement:(NSString *)elementName 
+  namespaceURI:(NSString *)namespaceURI qualifiedName:(NSString *)qName
+{
+	if(([elementName compare:@"foreign"] == NSOrderedSame))
+	{
+		self.m_isInsert = YES;
+	}else if(([elementName compare:@"body"] == NSOrderedSame)){
+		
+		 [parser abortParsing];
+	}
+}
+
+//- (void)parserDidEndDocument:(NSXMLParser *)parser {
+//	
+//	[parser release];
+//	
+//}
+
+
+- (void)didReceiveMemoryWarning {
+    // Releases the view if it doesn't have a superview.
+    [super didReceiveMemoryWarning];
+}
+
+- (void)viewDidUnload {
+	
+    [super viewDidUnload];
+}
+
+#pragma mark  self Custom FUNCTION
+-(NSString *)makeXml
+{
+    NSMutableString *xml  = [[[NSMutableString alloc]initWithString:self.m_volumnNo]autorelease] ;
+	[xml appendString:@"n"];
+	[xml appendString:[self addZeroToLectionNo:self.m_lectionNo]];
+    [xml appendString:@".xml"];
+	return xml;
+	
+}
+
+
+-(NSString *) addZeroToLectionNo :(NSString *) oldLecNo
+{
+	NSMutableString *lecNo = [[[NSMutableString alloc]initWithFormat:@"%@",oldLecNo]autorelease];
+	switch ([lecNo length]) {
+		case  1:
+			[lecNo insertString:@"000" atIndex:0];
+			break;
+		case 2:
+			[lecNo insertString:@"00" atIndex:0];
+			break;
+		case 3:
+			[lecNo insertString:@"0" atIndex:0];
+			break;
+		case 4:
+		{   if([lecNo intValue]<1000)
+		{
+			[lecNo insertString:@"0" atIndex:0];
+		}
+		else {
+			
+		}
+			break;
+		}	
+		default:
+			break;
+	}
+	return lecNo;
+	
+}
+
+-(NSString *) addZeroToSubVoluNo :(NSString *) oldSubVolNo
+{
+	NSMutableString *SubVolNo = [[[NSMutableString alloc]initWithFormat:@"%@",oldSubVolNo]autorelease];
+	switch ([SubVolNo length]) {
+		case 1:
+			[SubVolNo insertString:@"00" atIndex:0];
+			break;
+		case 2:
+			[SubVolNo insertString:@"0" atIndex:0];
+			break;
+		case 3:
+	
+			break;
+			
+		default:
+			break;
+	}
+	return SubVolNo;
+	
+}
+
+@end

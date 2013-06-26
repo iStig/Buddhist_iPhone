@@ -1,0 +1,12 @@
+//
+// Prefix header for all source files of the 'cbeta' target in the 'cbeta' project
+//
+
+#ifdef __OBJC__
+    #import <Foundation/Foundation.h>
+    #import <UIKit/UIKit.h>
+  #define DEVICE_HEIGHT [[UIScreen mainScreen] bounds].size.height
+  #define APPURL @"iitms-apps://phobos.apple.com/WebObjects/MZStore.woa/wa/viewSoftware?id="//打开收费版本链接
+  #define FREE   YES //如果YES为免费版本不带自动缩放功能  如果NO为收费版本带自动缩放功能
+  #define REPEATSHOWALERTVIEW  NO//如果YES则会重复提醒下载新版本 如果NO则在按不再提醒后不重复提醒下载新版本alert
+#endif

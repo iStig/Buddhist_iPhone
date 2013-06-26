@@ -1,0 +1,71 @@
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svn/Projects/!svn/ver/564/trunk/cbetabook/Classes/Online/ZipArchive
+END
+ioapi.c
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/Projects/!svn/ver/446/trunk/cbetabook/Classes/Online/ZipArchive/ioapi.c
+END
+zip.c
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/Projects/!svn/ver/446/trunk/cbetabook/Classes/Online/ZipArchive/zip.c
+END
+unzip.c
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/Projects/!svn/ver/447/trunk/cbetabook/Classes/Online/ZipArchive/unzip.c
+END
+crypt.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/Projects/!svn/ver/446/trunk/cbetabook/Classes/Online/ZipArchive/crypt.h
+END
+ioapi.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/Projects/!svn/ver/446/trunk/cbetabook/Classes/Online/ZipArchive/ioapi.h
+END
+mztools.c
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/Projects/!svn/ver/446/trunk/cbetabook/Classes/Online/ZipArchive/mztools.c
+END
+zip.h
+K 25
+svn:wc:ra_dav:version-url
+V 74
+/svn/Projects/!svn/ver/446/trunk/cbetabook/Classes/Online/ZipArchive/zip.h
+END
+ZipArchive.h
+K 25
+svn:wc:ra_dav:version-url
+V 81
+/svn/Projects/!svn/ver/446/trunk/cbetabook/Classes/Online/ZipArchive/ZipArchive.h
+END
+unzip.h
+K 25
+svn:wc:ra_dav:version-url
+V 76
+/svn/Projects/!svn/ver/446/trunk/cbetabook/Classes/Online/ZipArchive/unzip.h
+END
+ZipArchive.mm
+K 25
+svn:wc:ra_dav:version-url
+V 82
+/svn/Projects/!svn/ver/564/trunk/cbetabook/Classes/Online/ZipArchive/ZipArchive.mm
+END
+mztools.h
+K 25
+svn:wc:ra_dav:version-url
+V 78
+/svn/Projects/!svn/ver/446/trunk/cbetabook/Classes/Online/ZipArchive/mztools.h
+END

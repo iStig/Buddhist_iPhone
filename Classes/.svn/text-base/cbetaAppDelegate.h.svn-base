@@ -1,0 +1,27 @@
+//
+//  cbetaAppDelegate.h
+//  cbeta
+//
+//  Created by jishen on 5/29/10.
+//  Copyright __MyCompanyName__ 2010. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@interface cbetaAppDelegate : NSObject <UIApplicationDelegate, UITabBarControllerDelegate> {
+    UIWindow *window;
+    UITabBarController *m_tabBarController;
+	NSInteger               networkingCount;
+}
+
+@property (nonatomic, retain) IBOutlet UIWindow *window;
+@property (nonatomic, retain) IBOutlet UITabBarController *m_tabBarController;
+@property (nonatomic, assign) NSInteger networkingCount;
+
++ (cbetaAppDelegate *)sharedAppDelegate;
+
+- (NSString *)pathForTemporaryFileWithPrefix:(NSString *)prefix;
+- (NSURL *)smartURLForString:(NSString *)str;
+- (void)didStartNetworking;
+- (void)didStopNetworking;
+@end

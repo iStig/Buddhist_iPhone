@@ -1,0 +1,192 @@
+//
+//  ReadView.m
+//  mobilebook
+//
+//  Created by Victor on 1/5/10.
+//  Copyright 2010 SmilingMobile Inc. All rights reserved.
+//
+
+#import "ReadView.h"
+#import "SettingData.h"
+
+@implementation ReadView
+@synthesize m_textView;
+@synthesize backGroundImgView;
+@synthesize startTouchPosition;
+@synthesize endTouchPosition;
+
+@synthesize backGroundImg;
+@synthesize readFont;
+@synthesize fontColor;
+@synthesize backGroundAlpha;
+
+
+- (id)initWithFrame:(CGRect)frame {
+	// get Setting Data
+	[self getSettingData];
+	
+    if (self = [super initWithFrame:frame]) {
+		self.backgroundColor =[UIColor whiteColor];
+		self.autoresizesSubviews = NO;
+		backGroundImgView = [[UIImageView alloc]initWithFrame: CGRectMake(0, 0, 320, 367)];
+		backGroundImgView.image = backGroundImg;
+		backGroundImgView.alpha = backGroundAlpha;
+		[self addSubview: backGroundImgView];
+		
+		// Set up the ability to track multiple touches.
+		self.userInteractionEnabled = YES;
+
+		// Create the textView and pageDown/pageUp buttons
+		m_textView = [[UITextView alloc]initWithFrame: CGRectMake(0, 0, 320, 367)];
+		m_textView.backgroundColor = [UIColor clearColor];
+		m_textView.editable = NO;
+		//m_textView.multipleTouchEnabled = YES;
+		m_textView.userInteractionEnabled = NO;
+		
+		m_textView.pagingEnabled = YES;
+		m_textView.scrollEnabled = YES;
+		m_textView.textColor = fontColor;
+		m_textView.font = readFont;
+		[self addSubview:m_textView];
+
+    }
+    return self;
+}
+
+
+- (void)drawRect:(CGRect)rect {
+    // Drawing code
+}
+
+
+- (void)dealloc {
+	[m_textView release];
+	[backGroundImgView release];
+	[fontColor release];
+	[readFont release];
+	[backGroundImg release];
+    [super dealloc];
+}
+
+
+
+- (void) swipeFromRightToLeft {
+	NSLog(@" swipeFromRightToLeft") ; 
+	[[NSNotificationCenter defaultCenter] postNotificationName:Notification_SwipeToLeft object:nil];
+}
+
+- (void) swipeFromLeftToRight {
+	NSLog(@" swipeFromLeftToRight") ; 
+	[[NSNotificationCenter defaultCenter] postNotificationName:Notification_SwipeToRight object:nil];
+}
+
+
+- (void) onSingleTap  {
+	NSLog(@" onSingleTap") ; 
+	if(endTouchPosition.x< 100){
+		NSLog(@" Page Up");
+		[[NSNotificationCenter defaultCenter] postNotificationName:Notification_SingleTap_Left object:nil];
+	}
+	else if(endTouchPosition.x<220) {
+		NSLog(@"AutoScroll" );
+		[[NSNotificationCenter defaultCenter] postNotificationName:Notification_SingleTap_Center object:nil];
+	}
+	else {
+		NSLog(@"Page Down");
+		[[NSNotificationCenter defaultCenter] postNotificationName:Notification_SingleTap_Right object:nil];
+	}
+	
+}
+
+- (void) onDoubleTap {
+	NSLog(@" onDoubleTap") ; 
+	[[NSNotificationCenter defaultCenter] postNotificationName:Notification_DoulbeTap object:nil];
+	
+}
+
+
+#define HORIZ_SWIPE_DRAG_MIN   30
+#define VERT_SWIPE_DRAG_MAX    100
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+	UITouch *touch = [touches anyObject];
+	NSUInteger numTaps = [touch tapCount];
+	if ( numTaps == 2 ) {
+		// be Double Tap, so cancel the SingalTap's thread
+		[[self class] cancelPreviousPerformRequestsWithTarget:self selector:@selector(onSingleTap) object:nil];
+		//		return ; 
+	} else if (numTaps == 1)
+	{
+		// not double tap 
+		UITouch *touch = [touches anyObject];
+		startTouchPosition = [touch locationInView:self];
+	}  
+	[super touchesBegan:touches		withEvent:event] ; 
+}
+
+
+- (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+{
+	NSUInteger numTaps = [[touches anyObject] tapCount];
+	//	NSLog(@"numTaps: %d", numTaps ) ; 
+	
+	UITouch *touch = [touches anyObject];
+	endTouchPosition = (CGPoint) [touch locationInView:self];
+	switch (numTaps) {
+		case 0:
+			if (fabsf(startTouchPosition.x - endTouchPosition.x) >= HORIZ_SWIPE_DRAG_MIN &&
+				fabsf(startTouchPosition.y - endTouchPosition.y) <= VERT_SWIPE_DRAG_MAX)
+			{
+				// It appears to be a swipe.
+				if (startTouchPosition.x < endTouchPosition.x)
+					[self swipeFromLeftToRight] ; 
+				else
+					[self swipeFromRightToLeft] ; 
+			}
+			break;			
+		case 1: 
+		{
+			// send a pre-SingleTap call, will be cancelled when DoubleTap comes later
+			[self performSelector:@selector(onSingleTap) withObject:nil afterDelay:0.5] ; 
+			break ; 
+		}
+		case 2: 
+			[self onDoubleTap] ; 
+			break ; 
+		default:
+			break;
+	}
+	[super touchesEnded:touches		withEvent:event] ; 
+}
+
+
+- (void) setPaging: (BOOL) pagingOn{
+	
+	if(pagingOn == YES) {
+		m_textView.userInteractionEnabled = NO;
+		m_textView.pagingEnabled = YES;
+	}
+	else {
+		m_textView.userInteractionEnabled = YES;
+		m_textView.pagingEnabled =NO;
+	}
+	
+}
+
+- (void) getSettingData{
+	SettingData *settingData = [SettingData sharedSettingData];
+	backGroundImg = [settingData getCurrentBackGroundImg];
+	readFont = [ settingData getCurrentFont];
+	fontColor = [settingData getCurrentFontColor];
+	backGroundAlpha = settingData.backgroundAlpha;
+	
+	backGroundImgView.image = backGroundImg;
+	backGroundImgView.alpha = backGroundAlpha;
+	m_textView.textColor = fontColor;
+	m_textView.font = readFont;
+
+}
+
+
+@end
